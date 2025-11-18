@@ -1,0 +1,13 @@
+---
+title: "RNASeq analysis "
+format: html
+---
+
+## Background
+
+lets do some RNASeq analysis with DESeq2
+
+## Data import
+
+```{r}
+counts <- read.

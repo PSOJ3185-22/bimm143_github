@@ -1,0 +1,335 @@
+---
+title: "Class 14: RNASeq mini project"
+author: "Jiayi Zhou (PID: A17856751)"
+format: pdf
+toc: true
+---
+
+## Background
+
+Here we work through a complete RNASeq analysis project. The input data comes from a knock-down experiment of a HOX gene.
+
+## Data Import
+
+Reading the `counts` and `metadata` csv files
+
+```{r}
+counts <- read.csv("GSE37704_featurecounts.csv")
+metadata <- read.csv("GSE37704_metadata.csv")
+```
+
+Check on data structure
+
+```{r}
+head(counts)
+```
+
+```{r}
+metadata
+```
+
+Some book-keeping is required as there looks to be a mis-match betweem metadata rows and counts columns
+
+```{r}
+ncol(counts)
+```
+
+```{r}
+nrow(metadata)
+```
+
+Looks like we need to get rid of the first "length" column of our `counts` object.
+
+```{r}
+cleancounts <- counts[ , -c(1, 2)]
+```
+
+```{r}
+colnames(cleancounts)
+```
+
+```{r}
+metadata$id
+```
+
+```{r}
+all(colnames(cleancounts) == metadata$id)
+```
+    
+## Remove zero count genes
+
+There are lots of genes with zero counts. We can remove these from 
+
+```{r}
+head(cleancounts)
+```
+
+```{r}
+to.keep.inds <- rowSums(cleancounts) > 0
+nonzero_counts <- cleancounts[to.keep.inds, ]
+```
+
+## DESeq analysis
+
+Load the package
+
+```{r}
+library(DESeq2)
+```
+
+Set up DESeq object
+
+```{r}
+dds <- DESeqDataSetFromMatrix(
+  countData = nonzero_counts,
+  colData   = metadata,
+  design    = ~ condition
+)
+```
+
+Run DESeq
+
+```{r}
+dds <- DESeq(dds)
+```
+
+Get results
+
+```{r}
+res <- results(dds)
+head(res)
+```
+
+## Data Visualization
+
+Volcano plot
+
+```{r}
+library(ggplot2)
+
+ggplot(res) +
+  aes(log2FoldChange, -log(padj)) +
+  geom_point()
+```
+
+Add threshold lines for fold-change and P-values and color our subset of genes that make these throshold cut-off in the plot.
+
+```{r}
+library(ggplot2)
+
+res_df <- as.data.frame(res)
+res_df$padj[is.na(res_df$padj)] <- 1
+
+ggplot(res_df, aes(x = log2FoldChange, y = -log10(padj))) +
+  geom_point() +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "red") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red")
+```
+
+Improve this plot by completing the below code, which adds color and axis labels.
+
+```{r}
+# Make a color vector for all genes
+mycols <- rep("gray", nrow(res))
+
+# Color red for |log2FC| > 2
+mycols[ abs(res$log2FoldChange) > 2 ] <- "red"
+
+# Color blue for padj < 0.01 AND |log2FC| > 2
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2)
+mycols[inds] <- "blue"
+
+# Volcano plot
+plot(res$log2FoldChange,
+     -log(res$padj),
+     col = mycols,
+     xlab = "Log2(FoldChange)",
+     ylab = "-Log(P-value)")
+```
+
+## Add annotation
+
+Add gene symbols and entrez ids
+
+```{r}
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+```
+
+```{r}
+head(
+  mapIds(x = org.Hs.eg.db,
+         keys = row.names(res),
+         column = "SYMBOL",
+         keytype = "ENTREZID",
+         multiVals = "first"),
+  10
+)
+```
+
+
+```{r}
+res$symbol <- mapIds(
+  x = org.Hs.eg.db,
+  keys = row.names(res),
+  keytype = "ENTREZID",
+  column = "SYMBOL",
+  multiVals = "first"
+)
+
+res$entrez <- mapIds(
+  x = org.Hs.eg.db,
+  keys = row.names(res),
+  keytype = "ENTREZID",
+  column = "ENTREZID",
+  multiVals = "first"
+)
+
+```
+
+## Pathway Analysis
+
+run gage analysis
+
+```{r, message=FALSE}
+library(pathview)
+```
+
+```{r, message=FALSE}
+library(gage)
+library(gageData)
+
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+
+head(kegg.sets.hs, 3)
+```
+
+We need a named vector as input for gage
+
+```{r}
+Foldchanges = res$log2FoldChange
+names(Foldchanges) = res$entrez
+head(Foldchanges)
+```
+Now, let’s run the gage pathway analysis.
+
+```{r}
+keggres = gage(Foldchanges, gsets=kegg.sets.hs)
+```
+
+Look at the object returned from gage().
+
+```{r}
+attributes(keggres)
+```
+
+Look at the first few down (less) pathways
+
+```{r}
+head(keggres$less)
+```
+Each *keggres$less* and *keggres$greater* object is a data matrix whose rows are gene sets ranked by p-value.
+The top down-regulated (“less”) pathway is **Cell cycle (hsa04110)**.
+
+Now we use `pathview()` to visualize a KEGG pathway with our RNA-Seq expression data overlaid.
+We manually provide the pathway ID—in this case **hsa04110** from the “Cell cycle” pathway identified above.
+
+```{r}
+pathview(gene.data=Foldchanges, pathway.id="hsa04110")
+```
+
+![](hsa04110.png)
+
+![](hsa04110.pathview.png)
+
+A different PDF based output of the same data
+```{r}
+pathview(gene.data=Foldchanges, pathway.id="hsa04110", kegg.native=FALSE)
+```
+Now we extract the top five up-regulated pathways and pull out their KEGG pathway IDs for use with `pathview()`.
+
+```{r}
+keggrespathways <- rownames(keggres$greater)[1:5]
+
+keggresids = substr(keggrespathways, start=1, stop=8)
+keggresids
+```
+
+Lets pass these IDs in keggresids to the *pathview()* function to draw plots for all the top 5 pathways.
+
+```{r}
+pathview(gene.data=Foldchanges, pathway.id=keggresids, species="hsa")
+```
+
+![](hsa04962.pathview.png)
+![](hsa02010.pathview.png)
+![](hsa04360.pathview.png)
+
+![](hsa05016.pathview.png)
+![](hsa04974.pathview.png)
+
+> Q. Can you do the same procedure as above to plot the pathview figures for the top 5 down-reguled pathways?
+
+```{r}
+# Get the names of the top 5 "less/down" pathways
+keggrespathways.down <- rownames(keggres$less)[1:5]
+
+# Extract the 8-character KEGG IDs (e.g. "hsa04110")
+keggresids.down <- substr(keggrespathways.down, start = 1, stop = 8)
+keggresids.down
+
+# Draw pathview figures for the top 5 down-regulated pathways
+pathview(gene.data = Foldchanges,
+        pathway.id = keggresids.down,
+        species = "hsa")
+```
+
+![](hsa03030.pathview.png)
+![](hsa04940.pathview.png)
+
+## GO terms
+
+Same analysis but using GO genesets rather than KEGG
+
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+
+# Focus on Biological Process subset of GO
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(Foldchanges, gsets=gobpsets, same.dir=TRUE)
+```
+
+```{r}
+head(gobpres$less)
+```
+
+```{r}
+lapply(gobpres, head)
+```
+
+## Reactome Analysis
+
+Lots of folks like the reactome web interface. YOu can also run this as an R function but lets look at the website first <http://reactome.org/>
+
+Using the set of significant genes (FDR < 0.05) from our differential expression results, we first export them as a plain text file for Reactome over-representation and pathway-topology analysis in R.
+
+```{r}
+sig_genes <- res[res$padj <= 0.05 & !is.na(res$padj), "symbol"]
+print(paste("Total number of significant genes:", length(sig_genes)))
+```
+
+```{r}
+write.table(sig_genes, file="significant_genes.txt",
+            row.names = FALSE, col.names=FALSE, quote=FALSE)
+```
+
+## Save our results
+
+```{r}
+write.csv(res, file="myresults.csv")
+```
