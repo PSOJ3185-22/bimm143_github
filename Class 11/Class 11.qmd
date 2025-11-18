@@ -1,0 +1,288 @@
+---
+title: "Class 11: Structural Bioinoformatics pt2"
+author: "Jiayi Zhou (PID:A17856751）"
+format: pdf
+toc: true
+---
+
+## AlphaFold Data Base (AFDB)
+
+The EBI maintains the largest database of AlphaFold structure prediction models at:
+https://alphafold.ebi.ac.uk
+
+From last class (before Halloween) we saw that PDB has 244,290 (Oct 2025)
+
+The total number of protein sequences in UniProtKB is 199,579,901.
+
+> Key Point: This is a tiny fraction of sequence space that has structural coverage (0.12%)
+
+```{r}
+244290/199579901*100
+```
+
+AFDB is attempting to address this gap...
+
+there are two "Quality Scores" from Alphafold, one for residues (i.e. each amino acid) called **pLDDT** score. The other **PAE** score measures the confidence in the relative position of two residues (i.e. a score for every pair of residues).
+
+## Generating your own structure predictions
+
+Figure of 5 generated HIV_PR models
+
+![Figure of 5 generated HIV_PR models](HIVPRDimer_23119_pae.png)
+
+Figure of sequence coverage
+
+![Figure of sequence coverage](HIVPRDimer_23119_coverage.png)
+
+Figure of Predicted IDDT per position
+
+![Figure of 5 Predicted IDDT per position](HIVPRDimer_23119_plddt.png)
+## Visualization of the models and their estimated reliability
+
+Fitted and pLDDT colored Nras structure models. 
+
+![Fitted and pLDDT colored Nras structure models](Fitted_and_pLDDT_colored_Nras_structure models.png)
+
+Coloring the Residue property of Secondary Structure
+
+![Secondary Structure](Secondary_structure.png)
+
+Coloring the Residue property of Hydrophobicity
+
+![Hydrophobicity](Hydrophobicity.png)
+Coloring the Residue property of Accessible surface Area
+
+![Accessible surface Area](Accessible_Surface_Area.png)
+
+## Custom analysis of resulting models in R
+
+Now we read the results of the more complicated HIV-Pr dimer AlphaFold2 models into R using `Bio3D package`.
+
+To move our AlphaFold results directory into our RStudio project directory...
+
+```{r}
+
+results_dir <- "hivprdimer_23119/" 
+
+pdb_files <- list.files(path=results_dir,
+                        pattern="*.pdb",
+                        full.names = TRUE)
+```
+
+Print out our PDB file names
+
+```{r}
+basename(pdb_files)
+```
+
+```{r}
+library(bio3d)
+
+pdbs <- pdbaln(pdb_files, fit=TRUE, exefile="msa")
+```
+To use the `rmsd()` function to calculate the RMSD between all pairs models...
+```{r}
+rd <- rmsd(pdbs, fit=T)
+
+range(rd)
+```
+
+Draw a heatmap of these RMSD matrix values
+
+```{r}
+library(pheatmap)
+
+colnames(rd) <- paste0("m",1:5)
+rownames(rd) <- paste0("m",1:5)
+pheatmap(rd)
+```
+Models 1 and 2 are most similar to each other, while 4 and 5 resemble each other and are closer to 3 than to 1 or 2.
+
+```{r}
+pdb <- read.pdb("1hsg")
+
+plotb3(pdbs$b[1,], typ="l", lwd=2, sse=pdb)
+points(pdbs$b[2,], typ="l", col="red")
+points(pdbs$b[3,], typ="l", col="blue")
+points(pdbs$b[4,], typ="l", col="darkgreen")
+points(pdbs$b[5,], typ="l", col="orange")
+abline(v=100, col="gray")
+```
+```{r}
+core <- core.find(pdbs)
+core.inds <- print(core, vol=0.5)
+xyz <- pdbfit(pdbs, core.inds, outpath="corefit_structures")
+```
+
+We can also plot the pLDDT values across all models
+
+```{r}
+pdb <- read.pdb("1hsg")
+
+plotb3(pdbs$b[1,], typ="l", lwd=2, sse=pdb)
+points(pdbs$b[2,], typ="l", col="red")
+points(pdbs$b[3,], typ="l", col="blue")
+points(pdbs$b[4,], typ="l", col="darkgreen")
+points(pdbs$b[5,], typ="l", col="orange")
+abline(v=100, col="gray")
+```
+
+To enhance the alignment of our models, we can identify the most stable “rigid core” shared among them using the `core.find()` function:
+
+```{r}
+core <- core.find(pdbs)
+```
+
+The resulting core atom positions then serve as a reference for a refined superposition, after which we can save the fitted structures to `corefit_structures`:
+
+```{r}
+core.inds <- print(core, vol=0.5)
+xyz <- pdbfit(pdbs, core.inds, outpath="corefit_structures")
+```
+We can now visualize these structures in Mol* and apply coloring based on the Atom Property **Uncertainty/Disorder**, corresponding to the **B-factor** column that stores the **pLDDT** scores.
+
+/Users/jennyzhou/Downloads/M1_CONSERV.PDB-2.png
+
+![Figure of  m1_conserv Uncertainty](M1_CONSERV.PDB-2.png)
+
+Examine the RMSF between positions of the structure.
+```{r}
+rf <- rmsf(xyz)
+
+plotb3(rf, sse=pdb)
+abline(v=100, col="gray", ylab="RMSF")
+```
+
+
+```{r}
+library(bio3d)
+
+m1 <- read.pdb(pdb_files[1])
+m1
+```
+
+```{r}
+head(m1$atom)
+```
+```{r}
+library(bio3d)
+
+m1 <- read.pdb(pdb_files[1])
+m1
+```
+
+```{r}
+m1$atom$b
+```
+
+```{r}
+plot( m1$atom$b[m1$calpha],typ="l", ylim=c(0,100))
+```
+
+## Predicted Alignment Error for domains
+
+AlphaFold also provides a *Predicted Aligned Error (PAE)* output, stored in per-model JSON files. PAE measures the expected positional error between residues, independent of the 3D structure.
+
+In R, we can read these files with jsonlite
+
+```{r}
+library(jsonlite)
+
+pae_files <- list.files(path=results_dir,
+                        pattern=".*model.*\\.json",
+                        full.names = TRUE)
+```
+
+for example
+```{r}
+pae1 <- jsonlite::read_json(pae_files[1], simplifyVector = TRUE)
+pae5 <- jsonlite::read_json(pae_files[5], simplifyVector = TRUE)
+attributes(pae1)
+```
+```{r}
+head(pae1$plddt) 
+```
+
+Each file contains per-residue pLDDT, max_pae, and full pae matrices.
+Lower PAE values indicate higher confidence. For example:
+
+```{r}
+pae1$max_pae  #(better)
+pae5$max_pae  # (worse)
+```
+
+We can visualize the residue-to-residue PAE matrices with Bio3D:
+
+```{r}
+plot.dmat(pae1$pae, 
+          xlab="Residue Position (i)",
+          ylab="Residue Position (j)")
+
+plot.dmat(pae5$pae, 
+          xlab="Residue Position (i)",
+          ylab="Residue Position (j)",
+          grid.col = "black",
+          zlim=c(0,30))
+```
+
+Using the same z-range across models allows direct comparison
+
+```{r}
+plot.dmat(pae1$pae, 
+          xlab="Residue Position (i)",
+          ylab="Residue Position (j)",
+          grid.col = "black",
+          zlim=c(0,30))
+```
+
+## Residue conservation from alignment file
+
+```{r}
+aln_file <- list.files(path=results_dir,
+                       pattern=".a3m$",
+                        full.names = TRUE)
+aln_file
+```
+
+```{r}
+aln <- read.fasta(aln_file[1], to.upper = TRUE)
+```
+
+How many sequences are in this alignment
+
+```{r}
+dim(aln$ali)
+```
+The alignment contains 5,397 sequences and 132 positions.
+
+We can score residue conservation in the alignment with the `conserv()` function.
+
+```{r}
+sim <- conserv(aln)
+
+plotb3(sim[1:99], sse=trim.pdb(pdb, chain="A"),
+       ylab="Conservation Score")
+```
+Highly conserved active-site residues (D25–A28) are evident. A consensus sequence at a 0.9 cutoff confirms these conserved motifs:
+
+```{r}
+con <- consensus(aln, cutoff = 0.9)
+con$seq
+```
+To visualize conservation, we mapped these scores to the **Occupancy** column of a PDB file:
+
+```{r}
+m1.pdb <- read.pdb(pdb_files[1])
+occ <- vec2resno(c(sim[1:99], sim[1:99]), m1.pdb$atom$resno)
+write.pdb(m1.pdb, o=occ, file="m1_conserv.pdb")
+```
+
+```{r}
+getwd()
+```
+```{r}
+list.files()
+```
+![Figure of  m1_conserv Occupancy](M1_CONSERV.PDB.png)
+
+

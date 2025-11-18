@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jiayi Zhou (PID:A17856751）">
+
+<title>Class 11: Structural Bioinoformatics pt2</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Class 11_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Class 11_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Class 11_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Class 11_files/libs/quarto-html/popper.min.js"></script>
+<script src="Class 11_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Class 11_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Class 11_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Class 11_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Class 11_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Class 11_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Class 11_files/libs/bootstrap/bootstrap-81267100e462c21b3d6c0d5bf76a3417.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Class 11: Structural Bioinoformatics pt2</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jiayi Zhou (PID:A17856751） </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="alphafold-data-base-afdb" class="level2">
+<h2 class="anchored" data-anchor-id="alphafold-data-base-afdb">AlphaFold Data Base (AFDB)</h2>
+<p>The EBI maintains the largest database of AlphaFold structure prediction models at: https://alphafold.ebi.ac.uk</p>
+<p>From last class (before Halloween) we saw that PDB has 244,290 (Oct 2025)</p>
+<p>The total number of protein sequences in UniProtKB is 199,579,901.</p>
+<blockquote class="blockquote">
+<p>Key Point: This is a tiny fraction of sequence space that has structural coverage (0.12%)</p>
+</blockquote>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">244290</span><span class="sc">/</span><span class="dv">199579901</span><span class="sc">*</span><span class="dv">100</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1224021</code></pre>
+</div>
+</div>
+<p>AFDB is attempting to address this gap…</p>
+<p>there are two “Quality Scores” from Alphafold, one for residues (i.e.&nbsp;each amino acid) called <strong>pLDDT</strong> score. The other <strong>PAE</strong> score measures the confidence in the relative position of two residues (i.e.&nbsp;a score for every pair of residues).</p>
+</section>
+<section id="generating-your-own-structure-predictions" class="level2">
+<h2 class="anchored" data-anchor-id="generating-your-own-structure-predictions">Generating your own structure predictions</h2>
+<p>Figure of 5 generated HIV_PR models</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="HIVPRDimer_23119_pae.png" class="img-fluid figure-img"></p>
+<figcaption>Figure of 5 generated HIV_PR models</figcaption>
+</figure>
+</div>
+<p>Figure of sequence coverage</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="HIVPRDimer_23119_coverage.png" class="img-fluid figure-img"></p>
+<figcaption>Figure of sequence coverage</figcaption>
+</figure>
+</div>
+<p>Figure of Predicted IDDT per position</p>
+<p><img src="HIVPRDimer_23119_plddt.png" class="img-fluid" alt="Figure of 5 Predicted IDDT per position"> ## Visualization of the models and their estimated reliability</p>
+<p>Fitted and pLDDT colored Nras structure models.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Fitted_and_pLDDT_colored_Nras_structure%20models.png" class="img-fluid figure-img"></p>
+<figcaption>Fitted and pLDDT colored Nras structure models</figcaption>
+</figure>
+</div>
+<p>Coloring the Residue property of Secondary Structure</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Secondary_structure.png" class="img-fluid figure-img"></p>
+<figcaption>Secondary Structure</figcaption>
+</figure>
+</div>
+<p>Coloring the Residue property of Hydrophobicity</p>
+<p><img src="Hydrophobicity.png" class="img-fluid" alt="Hydrophobicity"> Coloring the Residue property of Accessible surface Area</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Accessible_Surface_Area.png" class="img-fluid figure-img"></p>
+<figcaption>Accessible surface Area</figcaption>
+</figure>
+</div>
+</section>
+<section id="custom-analysis-of-resulting-models-in-r" class="level2">
+<h2 class="anchored" data-anchor-id="custom-analysis-of-resulting-models-in-r">Custom analysis of resulting models in R</h2>
+<p>Now we read the results of the more complicated HIV-Pr dimer AlphaFold2 models into R using <code>Bio3D package</code>.</p>
+<p>To move our AlphaFold results directory into our RStudio project directory…</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>results_dir <span class="ot">&lt;-</span> <span class="st">"hivprdimer_23119/"</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>pdb_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path=</span>results_dir,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pattern=</span><span class="st">"*.pdb"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Print out our PDB file names</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">basename</span>(pdb_files)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "HIVPRDimer_23119_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb"
+[2] "HIVPRDimer_23119_unrelaxed_rank_002_alphafold2_multimer_v3_model_1_seed_000.pdb"
+[3] "HIVPRDimer_23119_unrelaxed_rank_003_alphafold2_multimer_v3_model_5_seed_000.pdb"
+[4] "HIVPRDimer_23119_unrelaxed_rank_004_alphafold2_multimer_v3_model_2_seed_000.pdb"
+[5] "HIVPRDimer_23119_unrelaxed_rank_005_alphafold2_multimer_v3_model_3_seed_000.pdb"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bio3d)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>pdbs <span class="ot">&lt;-</span> <span class="fu">pdbaln</span>(pdb_files, <span class="at">fit=</span><span class="cn">TRUE</span>, <span class="at">exefile=</span><span class="st">"msa"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reading PDB files:
+hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb
+hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_002_alphafold2_multimer_v3_model_1_seed_000.pdb
+hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_003_alphafold2_multimer_v3_model_5_seed_000.pdb
+hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_004_alphafold2_multimer_v3_model_2_seed_000.pdb
+hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_005_alphafold2_multimer_v3_model_3_seed_000.pdb
+.....
+
+Extracting sequences
+
+pdb/seq: 1   name: hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_001_alphafold2_multimer_v3_model_4_seed_000.pdb 
+pdb/seq: 2   name: hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_002_alphafold2_multimer_v3_model_1_seed_000.pdb 
+pdb/seq: 3   name: hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_003_alphafold2_multimer_v3_model_5_seed_000.pdb 
+pdb/seq: 4   name: hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_004_alphafold2_multimer_v3_model_2_seed_000.pdb 
+pdb/seq: 5   name: hivprdimer_23119//HIVPRDimer_23119_unrelaxed_rank_005_alphafold2_multimer_v3_model_3_seed_000.pdb </code></pre>
+</div>
+</div>
+<p>To use the <code>rmsd()</code> function to calculate the RMSD between all pairs models…</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>rd <span class="ot">&lt;-</span> <span class="fu">rmsd</span>(pdbs, <span class="at">fit=</span>T)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in rmsd(pdbs, fit = T): No indices provided, using the 198 non NA positions</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(rd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]  0.000 14.754</code></pre>
+</div>
+</div>
+<p>Draw a heatmap of these RMSD matrix values</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pheatmap)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(rd) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"m"</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(rd) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"m"</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">pheatmap</span>(rd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Models 1 and 2 are most similar to each other, while 4 and 5 resemble each other and are closer to 3 than to 1 or 2.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>pdb <span class="ot">&lt;-</span> <span class="fu">read.pdb</span>(<span class="st">"1hsg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Note: Accessing on-line PDB file</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotb3</span>(pdbs<span class="sc">$</span>b[<span class="dv">1</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">lwd=</span><span class="dv">2</span>, <span class="at">sse=</span>pdb)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">2</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"red"</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">3</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"blue"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">4</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"darkgreen"</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">5</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"orange"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="dv">100</span>, <span class="at">col=</span><span class="st">"gray"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>core <span class="ot">&lt;-</span> <span class="fu">core.find</span>(pdbs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> core size 197 of 198  vol = 9885.822 
+ core size 196 of 198  vol = 6896.71 
+ core size 195 of 198  vol = 1337.847 
+ core size 194 of 198  vol = 1040.67 
+ core size 193 of 198  vol = 951.857 
+ core size 192 of 198  vol = 899.083 
+ core size 191 of 198  vol = 834.732 
+ core size 190 of 198  vol = 771.338 
+ core size 189 of 198  vol = 733.065 
+ core size 188 of 198  vol = 697.28 
+ core size 187 of 198  vol = 659.742 
+ core size 186 of 198  vol = 625.273 
+ core size 185 of 198  vol = 589.541 
+ core size 184 of 198  vol = 568.253 
+ core size 183 of 198  vol = 545.015 
+ core size 182 of 198  vol = 512.889 
+ core size 181 of 198  vol = 490.723 
+ core size 180 of 198  vol = 470.266 
+ core size 179 of 198  vol = 450.731 
+ core size 178 of 198  vol = 434.735 
+ core size 177 of 198  vol = 420.337 
+ core size 176 of 198  vol = 406.658 
+ core size 175 of 198  vol = 393.334 
+ core size 174 of 198  vol = 382.395 
+ core size 173 of 198  vol = 372.858 
+ core size 172 of 198  vol = 356.994 
+ core size 171 of 198  vol = 346.567 
+ core size 170 of 198  vol = 337.446 
+ core size 169 of 198  vol = 326.659 
+ core size 168 of 198  vol = 314.95 
+ core size 167 of 198  vol = 304.127 
+ core size 166 of 198  vol = 294.552 
+ core size 165 of 198  vol = 285.648 
+ core size 164 of 198  vol = 278.884 
+ core size 163 of 198  vol = 266.765 
+ core size 162 of 198  vol = 258.994 
+ core size 161 of 198  vol = 247.723 
+ core size 160 of 198  vol = 239.84 
+ core size 159 of 198  vol = 234.963 
+ core size 158 of 198  vol = 230.062 
+ core size 157 of 198  vol = 221.985 
+ core size 156 of 198  vol = 215.62 
+ core size 155 of 198  vol = 206.793 
+ core size 154 of 198  vol = 196.984 
+ core size 153 of 198  vol = 188.539 
+ core size 152 of 198  vol = 182.262 
+ core size 151 of 198  vol = 176.954 
+ core size 150 of 198  vol = 170.712 
+ core size 149 of 198  vol = 166.119 
+ core size 148 of 198  vol = 159.796 
+ core size 147 of 198  vol = 153.767 
+ core size 146 of 198  vol = 149.092 
+ core size 145 of 198  vol = 143.657 
+ core size 144 of 198  vol = 137.138 
+ core size 143 of 198  vol = 132.517 
+ core size 142 of 198  vol = 127.231 
+ core size 141 of 198  vol = 121.574 
+ core size 140 of 198  vol = 116.775 
+ core size 139 of 198  vol = 112.57 
+ core size 138 of 198  vol = 108.17 
+ core size 137 of 198  vol = 105.133 
+ core size 136 of 198  vol = 101.249 
+ core size 135 of 198  vol = 97.374 
+ core size 134 of 198  vol = 92.974 
+ core size 133 of 198  vol = 88.184 
+ core size 132 of 198  vol = 84.029 
+ core size 131 of 198  vol = 81.898 
+ core size 130 of 198  vol = 78.019 
+ core size 129 of 198  vol = 75.272 
+ core size 128 of 198  vol = 73.052 
+ core size 127 of 198  vol = 70.695 
+ core size 126 of 198  vol = 68.975 
+ core size 125 of 198  vol = 66.694 
+ core size 124 of 198  vol = 64.394 
+ core size 123 of 198  vol = 62.092 
+ core size 122 of 198  vol = 59.045 
+ core size 121 of 198  vol = 56.629 
+ core size 120 of 198  vol = 54.016 
+ core size 119 of 198  vol = 51.806 
+ core size 118 of 198  vol = 49.652 
+ core size 117 of 198  vol = 48.193 
+ core size 116 of 198  vol = 46.648 
+ core size 115 of 198  vol = 44.752 
+ core size 114 of 198  vol = 43.292 
+ core size 113 of 198  vol = 41.093 
+ core size 112 of 198  vol = 39.147 
+ core size 111 of 198  vol = 36.472 
+ core size 110 of 198  vol = 34.117 
+ core size 109 of 198  vol = 31.47 
+ core size 108 of 198  vol = 29.448 
+ core size 107 of 198  vol = 27.325 
+ core size 106 of 198  vol = 25.822 
+ core size 105 of 198  vol = 24.15 
+ core size 104 of 198  vol = 22.648 
+ core size 103 of 198  vol = 21.069 
+ core size 102 of 198  vol = 19.953 
+ core size 101 of 198  vol = 18.3 
+ core size 100 of 198  vol = 15.723 
+ core size 99 of 198  vol = 14.841 
+ core size 98 of 198  vol = 11.646 
+ core size 97 of 198  vol = 9.434 
+ core size 96 of 198  vol = 7.354 
+ core size 95 of 198  vol = 6.179 
+ core size 94 of 198  vol = 5.666 
+ core size 93 of 198  vol = 4.705 
+ core size 92 of 198  vol = 3.665 
+ core size 91 of 198  vol = 2.77 
+ core size 90 of 198  vol = 2.151 
+ core size 89 of 198  vol = 1.715 
+ core size 88 of 198  vol = 1.15 
+ core size 87 of 198  vol = 0.874 
+ core size 86 of 198  vol = 0.685 
+ core size 85 of 198  vol = 0.528 
+ core size 84 of 198  vol = 0.37 
+ FINISHED: Min vol ( 0.5 ) reached</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>core.inds <span class="ot">&lt;-</span> <span class="fu">print</span>(core, <span class="at">vol=</span><span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># 85 positions (cumulative volume &lt;= 0.5 Angstrom^3) 
+  start end length
+1     9  49     41
+2    52  95     44</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>xyz <span class="ot">&lt;-</span> <span class="fu">pdbfit</span>(pdbs, core.inds, <span class="at">outpath=</span><span class="st">"corefit_structures"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can also plot the pLDDT values across all models</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>pdb <span class="ot">&lt;-</span> <span class="fu">read.pdb</span>(<span class="st">"1hsg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Note: Accessing on-line PDB file</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in get.pdb(file, path = tempdir(), verbose = FALSE):
+/var/folders/hw/mb7lcvrd0v17c4nnmhd27vr40000gn/T//RtmprfX4Ld/1hsg.pdb exists.
+Skipping download</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotb3</span>(pdbs<span class="sc">$</span>b[<span class="dv">1</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">lwd=</span><span class="dv">2</span>, <span class="at">sse=</span>pdb)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">2</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"red"</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">3</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"blue"</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">4</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"darkgreen"</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(pdbs<span class="sc">$</span>b[<span class="dv">5</span>,], <span class="at">typ=</span><span class="st">"l"</span>, <span class="at">col=</span><span class="st">"orange"</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="dv">100</span>, <span class="at">col=</span><span class="st">"gray"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>To enhance the alignment of our models, we can identify the most stable “rigid core” shared among them using the <code>core.find()</code> function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>core <span class="ot">&lt;-</span> <span class="fu">core.find</span>(pdbs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> core size 197 of 198  vol = 9885.822 
+ core size 196 of 198  vol = 6896.71 
+ core size 195 of 198  vol = 1337.847 
+ core size 194 of 198  vol = 1040.67 
+ core size 193 of 198  vol = 951.857 
+ core size 192 of 198  vol = 899.083 
+ core size 191 of 198  vol = 834.732 
+ core size 190 of 198  vol = 771.338 
+ core size 189 of 198  vol = 733.065 
+ core size 188 of 198  vol = 697.28 
+ core size 187 of 198  vol = 659.742 
+ core size 186 of 198  vol = 625.273 
+ core size 185 of 198  vol = 589.541 
+ core size 184 of 198  vol = 568.253 
+ core size 183 of 198  vol = 545.015 
+ core size 182 of 198  vol = 512.889 
+ core size 181 of 198  vol = 490.723 
+ core size 180 of 198  vol = 470.266 
+ core size 179 of 198  vol = 450.731 
+ core size 178 of 198  vol = 434.735 
+ core size 177 of 198  vol = 420.337 
+ core size 176 of 198  vol = 406.658 
+ core size 175 of 198  vol = 393.334 
+ core size 174 of 198  vol = 382.395 
+ core size 173 of 198  vol = 372.858 
+ core size 172 of 198  vol = 356.994 
+ core size 171 of 198  vol = 346.567 
+ core size 170 of 198  vol = 337.446 
+ core size 169 of 198  vol = 326.659 
+ core size 168 of 198  vol = 314.95 
+ core size 167 of 198  vol = 304.127 
+ core size 166 of 198  vol = 294.552 
+ core size 165 of 198  vol = 285.648 
+ core size 164 of 198  vol = 278.884 
+ core size 163 of 198  vol = 266.765 
+ core size 162 of 198  vol = 258.994 
+ core size 161 of 198  vol = 247.723 
+ core size 160 of 198  vol = 239.84 
+ core size 159 of 198  vol = 234.963 
+ core size 158 of 198  vol = 230.062 
+ core size 157 of 198  vol = 221.985 
+ core size 156 of 198  vol = 215.62 
+ core size 155 of 198  vol = 206.793 
+ core size 154 of 198  vol = 196.984 
+ core size 153 of 198  vol = 188.539 
+ core size 152 of 198  vol = 182.262 
+ core size 151 of 198  vol = 176.954 
+ core size 150 of 198  vol = 170.712 
+ core size 149 of 198  vol = 166.119 
+ core size 148 of 198  vol = 159.796 
+ core size 147 of 198  vol = 153.767 
+ core size 146 of 198  vol = 149.092 
+ core size 145 of 198  vol = 143.657 
+ core size 144 of 198  vol = 137.138 
+ core size 143 of 198  vol = 132.517 
+ core size 142 of 198  vol = 127.231 
+ core size 141 of 198  vol = 121.574 
+ core size 140 of 198  vol = 116.775 
+ core size 139 of 198  vol = 112.57 
+ core size 138 of 198  vol = 108.17 
+ core size 137 of 198  vol = 105.133 
+ core size 136 of 198  vol = 101.249 
+ core size 135 of 198  vol = 97.374 
+ core size 134 of 198  vol = 92.974 
+ core size 133 of 198  vol = 88.184 
+ core size 132 of 198  vol = 84.029 
+ core size 131 of 198  vol = 81.898 
+ core size 130 of 198  vol = 78.019 
+ core size 129 of 198  vol = 75.272 
+ core size 128 of 198  vol = 73.052 
+ core size 127 of 198  vol = 70.695 
+ core size 126 of 198  vol = 68.975 
+ core size 125 of 198  vol = 66.694 
+ core size 124 of 198  vol = 64.394 
+ core size 123 of 198  vol = 62.092 
+ core size 122 of 198  vol = 59.045 
+ core size 121 of 198  vol = 56.629 
+ core size 120 of 198  vol = 54.016 
+ core size 119 of 198  vol = 51.806 
+ core size 118 of 198  vol = 49.652 
+ core size 117 of 198  vol = 48.193 
+ core size 116 of 198  vol = 46.648 
+ core size 115 of 198  vol = 44.752 
+ core size 114 of 198  vol = 43.292 
+ core size 113 of 198  vol = 41.093 
+ core size 112 of 198  vol = 39.147 
+ core size 111 of 198  vol = 36.472 
+ core size 110 of 198  vol = 34.117 
+ core size 109 of 198  vol = 31.47 
+ core size 108 of 198  vol = 29.448 
+ core size 107 of 198  vol = 27.325 
+ core size 106 of 198  vol = 25.822 
+ core size 105 of 198  vol = 24.15 
+ core size 104 of 198  vol = 22.648 
+ core size 103 of 198  vol = 21.069 
+ core size 102 of 198  vol = 19.953 
+ core size 101 of 198  vol = 18.3 
+ core size 100 of 198  vol = 15.723 
+ core size 99 of 198  vol = 14.841 
+ core size 98 of 198  vol = 11.646 
+ core size 97 of 198  vol = 9.434 
+ core size 96 of 198  vol = 7.354 
+ core size 95 of 198  vol = 6.179 
+ core size 94 of 198  vol = 5.666 
+ core size 93 of 198  vol = 4.705 
+ core size 92 of 198  vol = 3.665 
+ core size 91 of 198  vol = 2.77 
+ core size 90 of 198  vol = 2.151 
+ core size 89 of 198  vol = 1.715 
+ core size 88 of 198  vol = 1.15 
+ core size 87 of 198  vol = 0.874 
+ core size 86 of 198  vol = 0.685 
+ core size 85 of 198  vol = 0.528 
+ core size 84 of 198  vol = 0.37 
+ FINISHED: Min vol ( 0.5 ) reached</code></pre>
+</div>
+</div>
+<p>The resulting core atom positions then serve as a reference for a refined superposition, after which we can save the fitted structures to <code>corefit_structures</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>core.inds <span class="ot">&lt;-</span> <span class="fu">print</span>(core, <span class="at">vol=</span><span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># 85 positions (cumulative volume &lt;= 0.5 Angstrom^3) 
+  start end length
+1     9  49     41
+2    52  95     44</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>xyz <span class="ot">&lt;-</span> <span class="fu">pdbfit</span>(pdbs, core.inds, <span class="at">outpath=</span><span class="st">"corefit_structures"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can now visualize these structures in Mol* and apply coloring based on the Atom Property <strong>Uncertainty/Disorder</strong>, corresponding to the <strong>B-factor</strong> column that stores the <strong>pLDDT</strong> scores.</p>
+<p>Examine the RMSF between positions of the structure.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>rf <span class="ot">&lt;-</span> <span class="fu">rmsf</span>(xyz)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plotb3</span>(rf, <span class="at">sse=</span>pdb)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">v=</span><span class="dv">100</span>, <span class="at">col=</span><span class="st">"gray"</span>, <span class="at">ylab=</span><span class="st">"RMSF"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bio3d)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">read.pdb</span>(pdb_files[<span class="dv">1</span>])</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>m1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ Call:  read.pdb(file = pdb_files[1])
+
+   Total Models#: 1
+     Total Atoms#: 1514,  XYZs#: 4542  Chains#: 2  (values: A B)
+
+     Protein Atoms#: 1514  (residues/Calpha atoms#: 198)
+     Nucleic acid Atoms#: 0  (residues/phosphate atoms#: 0)
+
+     Non-protein/nucleic Atoms#: 0  (residues: 0)
+     Non-protein/nucleic resid values: [ none ]
+
+   Protein sequence:
+      PQITLWQRPLVTIKIGGQLKEALLDTGADDTVLEEMSLPGRWKPKMIGGIGGFIKVRQYD
+      QILIEICGHKAIGTVLVGPTPVNIIGRNLLTQIGCTLNFPQITLWQRPLVTIKIGGQLKE
+      ALLDTGADDTVLEEMSLPGRWKPKMIGGIGGFIKVRQYDQILIEICGHKAIGTVLVGPTP
+      VNIIGRNLLTQIGCTLNF
+
++ attr: atom, xyz, calpha, call</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(m1<span class="sc">$</span>atom)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  type eleno elety  alt resid chain resno insert      x      y      z o     b
+1 ATOM     1     N &lt;NA&gt;   PRO     A     1   &lt;NA&gt; 16.922 -3.898 -6.254 1 90.81
+2 ATOM     2    CA &lt;NA&gt;   PRO     A     1   &lt;NA&gt; 16.891 -2.467 -6.562 1 90.81
+3 ATOM     3     C &lt;NA&gt;   PRO     A     1   &lt;NA&gt; 16.406 -1.617 -5.395 1 90.81
+4 ATOM     4    CB &lt;NA&gt;   PRO     A     1   &lt;NA&gt; 15.930 -2.373 -7.746 1 90.81
+5 ATOM     5     O &lt;NA&gt;   PRO     A     1   &lt;NA&gt; 15.820 -2.146 -4.445 1 90.81
+6 ATOM     6    CG &lt;NA&gt;   PRO     A     1   &lt;NA&gt; 15.031 -3.559 -7.598 1 90.81
+  segid elesy charge
+1  &lt;NA&gt;     N   &lt;NA&gt;
+2  &lt;NA&gt;     C   &lt;NA&gt;
+3  &lt;NA&gt;     C   &lt;NA&gt;
+4  &lt;NA&gt;     C   &lt;NA&gt;
+5  &lt;NA&gt;     O   &lt;NA&gt;
+6  &lt;NA&gt;     C   &lt;NA&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bio3d)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> <span class="fu">read.pdb</span>(pdb_files[<span class="dv">1</span>])</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>m1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ Call:  read.pdb(file = pdb_files[1])
+
+   Total Models#: 1
+     Total Atoms#: 1514,  XYZs#: 4542  Chains#: 2  (values: A B)
+
+     Protein Atoms#: 1514  (residues/Calpha atoms#: 198)
+     Nucleic acid Atoms#: 0  (residues/phosphate atoms#: 0)
+
+     Non-protein/nucleic Atoms#: 0  (residues: 0)
+     Non-protein/nucleic resid values: [ none ]
+
+   Protein sequence:
+      PQITLWQRPLVTIKIGGQLKEALLDTGADDTVLEEMSLPGRWKPKMIGGIGGFIKVRQYD
+      QILIEICGHKAIGTVLVGPTPVNIIGRNLLTQIGCTLNFPQITLWQRPLVTIKIGGQLKE
+      ALLDTGADDTVLEEMSLPGRWKPKMIGGIGGFIKVRQYDQILIEICGHKAIGTVLVGPTP
+      VNIIGRNLLTQIGCTLNF
+
++ attr: atom, xyz, calpha, call</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>m1<span class="sc">$</span>atom<span class="sc">$</span>b</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   [1] 90.81 90.81 90.81 90.81 90.81 90.81 90.81 93.25 93.25 93.25 93.25 93.25
+  [13] 93.25 93.25 93.25 93.25 93.69 93.69 93.69 93.69 93.69 93.69 93.69 93.69
+  [25] 92.88 92.88 92.88 92.88 92.88 92.88 92.88 95.25 95.25 95.25 95.25 95.25
+  [37] 95.25 95.25 95.25 89.44 89.44 89.44 89.44 89.44 89.44 89.44 89.44 89.44
+  [49] 89.44 89.44 89.44 89.44 89.44 88.56 88.56 88.56 88.56 88.56 88.56 88.56
+  [61] 88.56 88.56 89.75 89.75 89.75 89.75 89.75 89.75 89.75 89.75 89.75 89.75
+  [73] 89.75 95.25 95.25 95.25 95.25 95.25 95.25 95.25 96.19 96.19 96.19 96.19
+  [85] 96.19 96.19 96.19 96.19 97.00 97.00 97.00 97.00 97.00 97.00 97.00 96.75
+  [97] 96.75 96.75 96.75 96.75 96.75 96.75 98.12 98.12 98.12 98.12 98.12 98.12
+ [109] 98.12 98.12 97.75 97.75 97.75 97.75 97.75 97.75 97.75 97.75 97.75 96.69
+ [121] 96.69 96.69 96.69 96.69 96.69 96.69 96.69 88.69 88.69 88.69 88.69 89.38
+ [133] 89.38 89.38 89.38 92.81 92.81 92.81 92.81 92.81 92.81 92.81 92.81 92.81
+ [145] 95.75 95.75 95.75 95.75 95.75 95.75 95.75 95.75 96.38 96.38 96.38 96.38
+ [157] 96.38 96.38 96.38 96.38 96.38 97.44 97.44 97.44 97.44 97.44 97.44 97.44
+ [169] 97.44 97.44 98.19 98.19 98.19 98.19 98.19 97.94 97.94 97.94 97.94 97.94
+ [181] 97.94 97.94 97.94 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.00
+ [193] 98.00 98.00 98.00 98.00 98.00 98.00 98.00 98.25 98.25 98.25 98.25 98.25
+ [205] 98.25 98.25 96.75 96.75 96.75 96.75 97.12 97.12 97.12 97.12 97.12 96.69
+ [217] 96.69 96.69 96.69 96.69 96.69 96.69 96.69 97.25 97.25 97.25 97.25 97.25
+ [229] 97.25 97.25 97.25 98.62 98.62 98.62 98.62 98.62 98.62 98.62 98.56 98.56
+ [241] 98.56 98.56 98.56 98.56 98.56 98.31 98.31 98.31 98.31 98.31 98.31 98.31
+ [253] 98.31 97.56 97.56 97.56 97.56 97.56 97.56 97.56 97.56 97.56 95.81 95.81
+ [265] 95.81 95.81 95.81 95.81 95.81 95.81 95.81 95.06 95.06 95.06 95.06 95.06
+ [277] 95.06 95.06 95.06 91.81 91.81 91.81 91.81 91.81 91.81 94.69 94.69 94.69
+ [289] 94.69 94.69 94.69 94.69 94.69 90.50 90.50 90.50 90.50 90.50 90.50 90.50
+ [301] 91.56 91.56 91.56 91.56 96.06 96.06 96.06 96.06 96.06 96.06 96.06 96.06
+ [313] 96.06 96.06 96.06 97.94 97.94 97.94 97.94 97.94 97.94 97.94 97.94 97.94
+ [325] 97.94 97.94 97.94 97.94 97.94 98.44 98.44 98.44 98.44 98.44 98.44 98.44
+ [337] 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.31 98.31 98.31
+ [349] 98.31 98.31 98.31 98.31 98.31 98.31 97.88 97.88 97.88 97.88 97.88 97.88
+ [361] 97.88 97.88 97.62 97.62 97.62 97.62 97.62 97.62 97.62 97.62 94.88 94.88
+ [373] 94.88 94.88 93.00 93.00 93.00 93.00 91.94 91.94 91.94 91.94 91.94 91.94
+ [385] 91.94 91.94 89.81 89.81 89.81 89.81 93.31 93.31 93.31 93.31 96.00 96.00
+ [397] 96.00 96.00 96.00 96.00 96.00 96.00 96.00 96.00 96.00 96.50 96.50 96.50
+ [409] 96.50 96.50 96.50 96.50 96.50 97.81 97.81 97.81 97.81 97.81 97.81 97.81
+ [421] 97.81 97.81 98.56 98.56 98.56 98.56 98.56 98.56 98.56 98.69 98.69 98.69
+ [433] 98.69 98.69 98.69 98.69 98.69 98.69 98.69 98.69 98.75 98.75 98.75 98.75
+ [445] 98.75 98.75 98.75 98.75 98.75 98.06 98.06 98.06 98.06 98.06 98.06 98.06
+ [457] 98.06 98.06 98.06 98.06 98.06 97.56 97.56 97.56 97.56 97.56 97.56 97.56
+ [469] 97.56 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.75 97.75
+ [481] 97.75 97.75 97.75 97.75 97.75 97.75 97.75 97.75 97.75 97.75 97.75 97.75
+ [493] 97.75 97.75 98.25 98.25 98.25 98.25 98.25 98.25 98.25 98.25 98.31 98.31
+ [505] 98.31 98.31 98.31 98.31 98.31 98.31 98.31 97.56 97.56 97.56 97.56 97.56
+ [517] 97.56 97.56 97.56 94.38 94.38 94.38 94.38 94.38 94.38 94.00 94.00 94.00
+ [529] 94.00 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.88
+ [541] 97.88 97.88 97.88 97.88 97.88 97.88 97.88 97.88 98.31 98.31 98.31 98.31
+ [553] 98.31 98.25 98.25 98.25 98.25 98.25 98.25 98.25 98.25 97.38 97.38 97.38
+ [565] 97.38 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.62 98.62 98.62 98.62
+ [577] 98.62 98.62 98.62 98.75 98.75 98.75 98.75 98.75 98.75 98.75 98.75 98.50
+ [589] 98.50 98.50 98.50 98.50 98.50 98.50 97.56 97.56 97.56 97.56 96.56 96.56
+ [601] 96.56 96.56 96.56 96.56 96.56 97.00 97.00 97.00 97.00 97.00 97.00 97.00
+ [613] 95.12 95.12 95.12 95.12 95.12 95.12 95.12 95.62 95.62 95.62 95.62 95.62
+ [625] 95.62 95.62 98.12 98.12 98.12 98.12 98.12 98.12 98.12 98.12 98.25 98.25
+ [637] 98.25 98.25 98.25 98.25 98.25 98.25 98.62 98.62 98.62 98.62 98.62 98.62
+ [649] 98.62 98.62 98.19 98.19 98.19 98.19 98.38 98.38 98.38 98.38 98.38 98.38
+ [661] 98.38 98.38 98.38 98.38 98.38 98.00 98.00 98.00 98.00 98.00 98.00 98.00
+ [673] 98.00 98.38 98.38 98.38 98.38 98.38 98.38 98.38 98.38 98.19 98.19 98.19
+ [685] 98.19 98.19 98.19 98.19 98.19 97.75 97.75 97.75 97.75 97.75 97.75 97.75
+ [697] 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.06 97.38 97.38 97.38
+ [709] 97.38 97.38 97.38 97.38 97.38 96.81 96.81 96.81 96.81 97.31 97.31 97.31
+ [721] 97.31 97.31 97.31 97.69 97.69 97.69 97.69 97.69 97.69 97.69 96.94 96.94
+ [733] 96.94 96.94 96.94 96.94 96.94 96.94 96.56 96.56 96.56 96.56 96.56 96.56
+ [745] 96.56 96.56 95.31 95.31 95.31 95.31 95.31 95.31 95.31 95.31 95.31 95.31
+ [757] 95.31 90.81 90.81 90.81 90.81 90.81 90.81 90.81 93.12 93.12 93.12 93.12
+ [769] 93.12 93.12 93.12 93.12 93.12 93.44 93.44 93.44 93.44 93.44 93.44 93.44
+ [781] 93.44 92.50 92.50 92.50 92.50 92.50 92.50 92.50 95.12 95.12 95.12 95.12
+ [793] 95.12 95.12 95.12 95.12 89.12 89.12 89.12 89.12 89.12 89.12 89.12 89.12
+ [805] 89.12 89.12 89.12 89.12 89.12 89.12 87.94 87.94 87.94 87.94 87.94 87.94
+ [817] 87.94 87.94 87.94 90.25 90.25 90.25 90.25 90.25 90.25 90.25 90.25 90.25
+ [829] 90.25 90.25 95.44 95.44 95.44 95.44 95.44 95.44 95.44 96.19 96.19 96.19
+ [841] 96.19 96.19 96.19 96.19 96.19 96.94 96.94 96.94 96.94 96.94 96.94 96.94
+ [853] 96.69 96.69 96.69 96.69 96.69 96.69 96.69 98.12 98.12 98.12 98.12 98.12
+ [865] 98.12 98.12 98.12 97.69 97.69 97.69 97.69 97.69 97.69 97.69 97.69 97.69
+ [877] 96.62 96.62 96.62 96.62 96.62 96.62 96.62 96.62 88.50 88.50 88.50 88.50
+ [889] 89.25 89.25 89.25 89.25 92.75 92.75 92.75 92.75 92.75 92.75 92.75 92.75
+ [901] 92.75 95.81 95.81 95.81 95.81 95.81 95.81 95.81 95.81 96.31 96.31 96.31
+ [913] 96.31 96.31 96.31 96.31 96.31 96.31 97.44 97.44 97.44 97.44 97.44 97.44
+ [925] 97.44 97.44 97.44 98.12 98.12 98.12 98.12 98.12 97.88 97.88 97.88 97.88
+ [937] 97.88 97.88 97.88 97.88 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.44
+ [949] 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.25 98.25 98.25 98.25
+ [961] 98.25 98.25 98.25 96.75 96.75 96.75 96.75 97.06 97.06 97.06 97.06 97.06
+ [973] 96.62 96.62 96.62 96.62 96.62 96.62 96.62 96.62 97.19 97.19 97.19 97.19
+ [985] 97.19 97.19 97.19 97.19 98.62 98.62 98.62 98.62 98.62 98.62 98.62 98.50
+ [997] 98.50 98.50 98.50 98.50 98.50 98.50 98.31 98.31 98.31 98.31 98.31 98.31
+[1009] 98.31 98.31 97.50 97.50 97.50 97.50 97.50 97.50 97.50 97.50 97.50 95.81
+[1021] 95.81 95.81 95.81 95.81 95.81 95.81 95.81 95.81 95.00 95.00 95.00 95.00
+[1033] 95.00 95.00 95.00 95.00 91.81 91.81 91.81 91.81 91.81 91.81 94.62 94.62
+[1045] 94.62 94.62 94.62 94.62 94.62 94.62 90.50 90.50 90.50 90.50 90.50 90.50
+[1057] 90.50 91.62 91.62 91.62 91.62 96.06 96.06 96.06 96.06 96.06 96.06 96.06
+[1069] 96.06 96.06 96.06 96.06 97.94 97.94 97.94 97.94 97.94 97.94 97.94 97.94
+[1081] 97.94 97.94 97.94 97.94 97.94 97.94 98.44 98.44 98.44 98.44 98.44 98.44
+[1093] 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.44 98.25 98.25
+[1105] 98.25 98.25 98.25 98.25 98.25 98.25 98.25 97.81 97.81 97.81 97.81 97.81
+[1117] 97.81 97.81 97.81 97.50 97.50 97.50 97.50 97.50 97.50 97.50 97.50 94.88
+[1129] 94.88 94.88 94.88 92.81 92.81 92.81 92.81 91.56 91.56 91.56 91.56 91.56
+[1141] 91.56 91.56 91.56 89.81 89.81 89.81 89.81 93.38 93.38 93.38 93.38 95.94
+[1153] 95.94 95.94 95.94 95.94 95.94 95.94 95.94 95.94 95.94 95.94 96.25 96.25
+[1165] 96.25 96.25 96.25 96.25 96.25 96.25 97.75 97.75 97.75 97.75 97.75 97.75
+[1177] 97.75 97.75 97.75 98.50 98.50 98.50 98.50 98.50 98.50 98.50 98.69 98.69
+[1189] 98.69 98.69 98.69 98.69 98.69 98.69 98.69 98.69 98.69 98.75 98.75 98.75
+[1201] 98.75 98.75 98.75 98.75 98.75 98.75 98.00 98.00 98.00 98.00 98.00 98.00
+[1213] 98.00 98.00 98.00 98.00 98.00 98.00 97.56 97.56 97.56 97.56 97.56 97.56
+[1225] 97.56 97.56 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.69
+[1237] 97.69 97.69 97.69 97.69 97.69 97.69 97.69 97.75 97.75 97.75 97.75 97.75
+[1249] 97.75 97.75 97.75 98.25 98.25 98.25 98.25 98.25 98.25 98.25 98.25 98.31
+[1261] 98.31 98.31 98.31 98.31 98.31 98.31 98.31 98.31 97.56 97.56 97.56 97.56
+[1273] 97.56 97.56 97.56 97.56 94.31 94.31 94.31 94.31 94.31 94.31 93.88 93.88
+[1285] 93.88 93.88 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44 97.44
+[1297] 97.81 97.81 97.81 97.81 97.81 97.81 97.81 97.81 97.81 98.31 98.31 98.31
+[1309] 98.31 98.31 98.25 98.25 98.25 98.25 98.25 98.25 98.25 98.25 97.38 97.38
+[1321] 97.38 97.38 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.62 98.62 98.62
+[1333] 98.62 98.62 98.62 98.62 98.75 98.75 98.75 98.75 98.75 98.75 98.75 98.75
+[1345] 98.44 98.44 98.44 98.44 98.44 98.44 98.44 97.50 97.50 97.50 97.50 96.38
+[1357] 96.38 96.38 96.38 96.38 96.38 96.38 96.81 96.81 96.81 96.81 96.81 96.81
+[1369] 96.81 95.00 95.00 95.00 95.00 95.00 95.00 95.00 95.50 95.50 95.50 95.50
+[1381] 95.50 95.50 95.50 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.19
+[1393] 98.19 98.19 98.19 98.19 98.19 98.19 98.19 98.56 98.56 98.56 98.56 98.56
+[1405] 98.56 98.56 98.56 98.19 98.19 98.19 98.19 98.38 98.38 98.38 98.38 98.38
+[1417] 98.38 98.38 98.38 98.38 98.38 98.38 98.06 98.06 98.06 98.06 98.06 98.06
+[1429] 98.06 98.06 98.38 98.38 98.38 98.38 98.38 98.38 98.38 98.38 98.25 98.25
+[1441] 98.25 98.25 98.25 98.25 98.25 98.25 97.75 97.75 97.75 97.75 97.75 97.75
+[1453] 97.75 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.06 98.06 97.38 97.38
+[1465] 97.38 97.38 97.38 97.38 97.38 97.38 96.75 96.75 96.75 96.75 97.38 97.38
+[1477] 97.38 97.38 97.38 97.38 97.75 97.75 97.75 97.75 97.75 97.75 97.75 96.94
+[1489] 96.94 96.94 96.94 96.94 96.94 96.94 96.94 96.62 96.62 96.62 96.62 96.62
+[1501] 96.62 96.62 96.62 95.38 95.38 95.38 95.38 95.38 95.38 95.38 95.38 95.38
+[1513] 95.38 95.38</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>( m1<span class="sc">$</span>atom<span class="sc">$</span>b[m1<span class="sc">$</span>calpha],<span class="at">typ=</span><span class="st">"l"</span>, <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">100</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="predicted-alignment-error-for-domains" class="level2">
+<h2 class="anchored" data-anchor-id="predicted-alignment-error-for-domains">Predicted Alignment Error for domains</h2>
+<p>AlphaFold also provides a <em>Predicted Aligned Error (PAE)</em> output, stored in per-model JSON files. PAE measures the expected positional error between residues, independent of the 3D structure.</p>
+<p>In R, we can read these files with jsonlite</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>pae_files <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path=</span>results_dir,</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pattern=</span><span class="st">".*model.*</span><span class="sc">\\</span><span class="st">.json"</span>,</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>for example</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>pae1 <span class="ot">&lt;-</span> jsonlite<span class="sc">::</span><span class="fu">read_json</span>(pae_files[<span class="dv">1</span>], <span class="at">simplifyVector =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>pae5 <span class="ot">&lt;-</span> jsonlite<span class="sc">::</span><span class="fu">read_json</span>(pae_files[<span class="dv">5</span>], <span class="at">simplifyVector =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="fu">attributes</span>(pae1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$names
+[1] "plddt"   "max_pae" "pae"     "ptm"     "iptm"   </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pae1<span class="sc">$</span>plddt) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 90.81 93.25 93.69 92.88 95.25 89.44</code></pre>
+</div>
+</div>
+<p>Each file contains per-residue pLDDT, max_pae, and full pae matrices. Lower PAE values indicate higher confidence. For example:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>pae1<span class="sc">$</span>max_pae  <span class="co">#(better)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 12.84375</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>pae5<span class="sc">$</span>max_pae  <span class="co"># (worse)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 29.59375</code></pre>
+</div>
+</div>
+<p>We can visualize the residue-to-residue PAE matrices with Bio3D:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.dmat</span>(pae1<span class="sc">$</span>pae, </span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">xlab=</span><span class="st">"Residue Position (i)"</span>,</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">ylab=</span><span class="st">"Residue Position (j)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.dmat</span>(pae5<span class="sc">$</span>pae, </span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">xlab=</span><span class="st">"Residue Position (i)"</span>,</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">ylab=</span><span class="st">"Residue Position (j)"</span>,</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">grid.col =</span> <span class="st">"black"</span>,</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">zlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">30</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-22-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Using the same z-range across models allows direct comparison</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.dmat</span>(pae1<span class="sc">$</span>pae, </span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">xlab=</span><span class="st">"Residue Position (i)"</span>,</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">ylab=</span><span class="st">"Residue Position (j)"</span>,</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">grid.col =</span> <span class="st">"black"</span>,</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">zlim=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">30</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="residue-conservation-from-alignment-file" class="level2">
+<h2 class="anchored" data-anchor-id="residue-conservation-from-alignment-file">Residue conservation from alignment file</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>aln_file <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path=</span>results_dir,</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">pattern=</span><span class="st">".a3m$"</span>,</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>                        <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>aln_file</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "hivprdimer_23119//HIVPRDimer_23119.a3m"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>aln <span class="ot">&lt;-</span> <span class="fu">read.fasta</span>(aln_file[<span class="dv">1</span>], <span class="at">to.upper =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] " ** Duplicated sequence id's: 101 **"
+[2] " ** Duplicated sequence id's: 101 **"</code></pre>
+</div>
+</div>
+<p>How many sequences are in this alignment</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(aln<span class="sc">$</span>ali)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5397  132</code></pre>
+</div>
+</div>
+<p>The alignment contains 5,397 sequences and 132 positions.</p>
+<p>We can score residue conservation in the alignment with the <code>conserv()</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">conserv</span>(aln)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plotb3</span>(sim[<span class="dv">1</span><span class="sc">:</span><span class="dv">99</span>], <span class="at">sse=</span><span class="fu">trim.pdb</span>(pdb, <span class="at">chain=</span><span class="st">"A"</span>),</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab=</span><span class="st">"Conservation Score"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Class-11_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Highly conserved active-site residues (D25–A28) are evident. A consensus sequence at a 0.9 cutoff confirms these conserved motifs:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">consensus</span>(aln, <span class="at">cutoff =</span> <span class="fl">0.9</span>)</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>con<span class="sc">$</span>seq</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-"
+ [19] "-" "-" "-" "-" "-" "-" "D" "T" "G" "A" "-" "-" "-" "-" "-" "-" "-" "-"
+ [37] "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-"
+ [55] "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-"
+ [73] "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-"
+ [91] "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-"
+[109] "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-" "-"
+[127] "-" "-" "-" "-" "-" "-"</code></pre>
+</div>
+</div>
+<p>To visualize conservation, we mapped these scores to the <strong>Occupancy</strong> column of a PDB file:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>m1.pdb <span class="ot">&lt;-</span> <span class="fu">read.pdb</span>(pdb_files[<span class="dv">1</span>])</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>occ <span class="ot">&lt;-</span> <span class="fu">vec2resno</span>(<span class="fu">c</span>(sim[<span class="dv">1</span><span class="sc">:</span><span class="dv">99</span>], sim[<span class="dv">1</span><span class="sc">:</span><span class="dv">99</span>]), m1.pdb<span class="sc">$</span>atom<span class="sc">$</span>resno)</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write.pdb</span>(m1.pdb, <span class="at">o=</span>occ, <span class="at">file=</span><span class="st">"m1_conserv.pdb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
