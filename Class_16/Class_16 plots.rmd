@@ -1,0 +1,105 @@
+---
+title: "Class 16"
+author: "Jiayi Zhou (PID:A17856751)"
+date: "2025-11-20"
+output: pdf_document
+---
+
+## Read the BLAST TSV and set column names
+
+```{r}
+b <- read.table("mm-second.x.zebrafish.tsv",
+                sep = "\t",
+                header = FALSE,
+                stringsAsFactors = FALSE)
+```
+
+```{r}
+colnames(b) <- c(
+  "qseqid", "sseqid", "pident", "length",
+  "mismatch", "gapopen", "qstart", "qend",
+  "sstart", "send", "evalue", "bitscore"
+)
+```
+
+```{r}
+head(b)
+str(b)
+```
+## Make a histogram of bitscore
+
+```{r}
+hist(b$bitscore,
+     breaks = 30,
+     main = "Distribution of BLAST bitscores",
+     xlab = "Bitscore")
+```
+
+Larger bitscores are better.
+
+```{r}
+adj_identity <- b$pident * (b$qend - b$qstart)
+
+plot(adj_identity, b$bitscore,
+     xlab = "pident × alignment length (qend - qstart)",
+     ylab = "bitscore",
+     main = "Adjusted identity vs bitscore")
+```
+
+## Using ggplot2
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+ggplot(b, aes(x = pident, y = bitscore)) +
+  geom_point(alpha = 0.1) +
+  labs(title = "Percent identity vs bitscore")
+```
+
+```{r}
+ggplot(b, aes(x = pident * (qend - qstart), y = bitscore)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth() +
+  labs(title = "pident × alignment length vs bitscore",
+       x = "pident × (qend - qstart)",
+       y = "bitscore")
+```
+Bitscore increases with both identity and alignment length.
+Two alignments with the same percent identity can have different bitscores if one covers more residues.
+So bitscore is only somewhat related to percent identity alone; it’s more tightly linked to “how many residues are matching over how long a region.”
+
+## Knit the R Markdown
+
+Run `scp -i ~/Downloads/keyjz.pem -r ubuntu@ec2-44-252-77-168.us-west-2.compute.amazonaws.com:~/work .` in terminal.
+
+> `-r` purpose
+
+- Means recursive.
+
+- It copies directories and all their contents (subdirectories, files, etc.).
+
+- Without `-r`, scp will fail on directories.
+
+> `*` Pupose
+ 
+- `~/work/*` means “all files and directories inside ~/work”.
+
+- Copies everything in `~/work` from the remote machine into current local directory.
+
+## Using rsync
+
+Run `scp -i ~/Downloads/keyjz.pem -r ubuntu@ec2-44-252-77-168.us-west-2.compute.amazonaws.com:~/work .` in terminal.
+
+- **`-a`**: Archive mode – copy recursively and preserve permissions, timestamps, and other metadata so the directory is cloned as faithfully as possible.
+
+- **`-z`**: Compress file data during transfer to reduce network bandwidth usage and often speed up transfers.
+
+- **`-P`**: Show progress for each file and keep partially transferred files so interrupted transfers can resume.
+
+- **`--exclude`**: Skip copying any files or directories whose names match the given pattern (e.g. `--exclude="*.psq"`).
+
+
+
+
