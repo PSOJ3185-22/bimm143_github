@@ -9,3 +9,11 @@ Classwork for [BIMM143 at UC San Diego](https://bioboot.github.io/bimm143_F25/) 
 - Class 09 [Structual Bioinformatics 1]()
 - Class 10 [Halloween candy Project]()
 - Class 11
+- Class 12
+- Class 13 Veterans Day Holiday
+- Class 14 [RNA_Seq mini project]()
+- Class 15 [Hands-on with Git and Github]()
+- Class 16 [Essential UNIX for bioinformatics]()
+- Class 17 [Genome informatics and high throughput sequencing]()
+- Class 18 Thanksgiving Holiday
+- Class 19 [Investigating Pretussis Resurgence Mini Project]()
