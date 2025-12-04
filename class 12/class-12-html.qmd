@@ -1,5 +1,5 @@
 ---
-title: "Class 12: RNAseq analysis"
+title: "Class 12 RNAseq analysis"
 author: "Jiayi Zhou (PID: A17856751)"
 format: pdf
 toc: true
@@ -366,5 +366,81 @@ head(res)
 
 Add the mapping for "GENENAME" and "ENTREZID" and store as `res$genename` and `res$entrez`
 
+```{r}
+res$entrez <- mapIds(keys = row.names(res), # our current IDs
+       keytype = "ENSEMBL",                 # the format of our IDs
+       x = org.Hs.eg.db,                    # where to get mappings from
+       column = "ENTREZID")                 # the format/DB to map to
+
+res$genename <- mapIds(keys = row.names(res), # our current IDs
+       keytype = "ENSEMBL",                 # the format of our IDs
+       x = org.Hs.eg.db,                    # where to get mappings from
+       column = "GENENAME") 
+```
+
+```{r}
+head(res)
+```
+
+## Pathway analysis
+
+There are lots of bioconductor packages to do this type of analysis. For now let's just try one called **gage** again we need to install this if we don't have it already.
+
+```{r, message=FALSE}
+library(gage)
+library(gageData)
+library(pathview)
+```
+
+To use **gage** I need two things
+
+- a named vector of fold-change calues for our DEGs (our geneset of interest)
+- a set of pathways or genesets to use for annotation
+
+```{r}
+c("barry"=5,"lisa"=10)
+```
+
+```{r}
+names(x) <- c("low", "high")
+x
+```
+
+```{r}
+foldchanges <- res$log2FoldChange
+names(foldchanges) <- res$entrez
+head(foldchanges)
+```
+
+```{r}
+data(kegg.sets.hs)
+
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+```
+
+In our results object we have:
+
+```{r}
+attributes(keggres)
+```
 
 
+```{r}
+head(keggres$less, 5)
+```
+
+Let's look at one of thgese pathways with our genes colored up so we can see the overlap
+
+```{r}
+pathview(pathway.id = "hsa05310", gene.data = foldchanges)
+```
+
+Add this pathway figure to our lab report
+
+![](hsa05310.png)
+
+## Save our main results
+
+```{r}
+write.csv(res, file = "myresults_annotated.csv")
+```
