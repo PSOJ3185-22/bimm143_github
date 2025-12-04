@@ -11,7 +11,7 @@ Classwork for [BIMM143 at UC San Diego](https://bioboot.github.io/bimm143_F25/) 
 - Class 11 [](Class 11/Class 11.md)
 - Class 12 [](class 12/class-12-html.md)
 - Class 13 Veterans Day Holiday
-- Class 14 [**RNA_Seq mini project**]()
+- Class 14 [**RNA_Seq mini project**](Class 14/class 14.md)
 - Class 15 [**Hands-on with Git and Github**]()
 - Class 16 [**Essential UNIX for bioinformatics**]()
 - Class 17 [**Genome informatics and high throughput sequencing**]()
